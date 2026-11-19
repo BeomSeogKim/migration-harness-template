@@ -1,0 +1,4 @@
+{
+  "build_command": "",
+  "production_markers": ["prod", "production"]
+}
