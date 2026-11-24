@@ -6,6 +6,23 @@ Read this file first. `CLAUDE.md` is a symlink to it; edit `AGENTS.md` only.
 Every rule below names the failure it exists to prevent. If a rule stops preventing
 anything, delete it.
 
+## This migration
+
+Filled in by the setup flow in `.claude/commands/setup.md` (`/setup` in Claude Code;
+other agents read the file and follow it). If `harness.json` does not say
+`"onboarded": true`, offer to run it before other work. Until then, every value in
+<angle brackets> is unknown: ask, do not assume.
+
+- Migrating: <legacy system and stack> to <new system and stack>
+- Repositories: <name: role (legacy, new, shared), path, whether agents change it>
+- Build and test: `build_command` in `harness.json`
+- Domain areas: <area, area>, each with `docs/code-map/<area>.md` and `docs/knowledge/<area>.md`
+- Practitioners: <roles, not names>; rules reach us through <meetings, tickets, documents>
+- Source of truth outside the code: <ledger, export, legacy database, or none yet>
+- Second reviewer: <tool and vendor, or none>, run through `review_command` in `harness.json`
+
+Prevents: an agent filling unknown project facts with plausible guesses.
+
 ## Before you explore
 
 1. Read `docs/code-map/` for where things live. Do not scan whole repositories.
@@ -48,7 +65,8 @@ anything, delete it.
    `harness.json`); a human decides which findings to apply.
    Prevents: the same misunderstanding passing both writing and review.
 9. The session cannot end while the build fails or the review has not passed
-   (`.claude/hooks/stop_gate.py`).
+   (`.claude/hooks/stop_gate.py`). Commit migration code only after the review
+   passes; the gate sees uncommitted changes only.
    Prevents: finishing with unreviewed changes.
 
 ## Hard lines

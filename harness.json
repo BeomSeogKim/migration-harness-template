@@ -1,4 +1,5 @@
 {
+  "onboarded": false,
   "build_command": "",
   "production_markers": ["prod", "production"],
   "protected_branches": ["main", "master"],
