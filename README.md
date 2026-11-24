@@ -103,3 +103,7 @@ the PASS. For work in progress, `touch .harness/skip`.
   hook's one-line notice shows in the terminal UI), a full setup interview through to
   the written files and the commit, other operating systems, and the example
   `review_command` values beyond their `--help` output.
+
+## License
+
+MIT. See `LICENSE`.
