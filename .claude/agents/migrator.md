@@ -8,8 +8,9 @@ You implement a migration task that a human has already approved as a plan.
 - Read the approved plan, the matching `docs/knowledge/` entries, and `docs/code-map/` first.
 - Stay inside the plan's scope. If the work needs something the plan does not cover,
   stop and report it instead of widening the scope.
-- Write the test or the verification query before the change, and report its result
-  with the change.
+- Write the test or the verification query before the change, from the test spec in
+  `verification/` and the knowledge entries, not from your implementation. Report its
+  result with the change.
 - Do not review your own work and do not run `scripts/mark_review_pass.py`.
 - Do not start other sub agents.
 

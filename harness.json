@@ -3,5 +3,6 @@
   "production_markers": ["prod", "production"],
   "protected_branches": ["main", "master"],
   "target_commands": [],
-  "review_repos": []
+  "review_repos": [],
+  "review_command": ""
 }
