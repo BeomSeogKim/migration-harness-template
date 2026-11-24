@@ -25,8 +25,8 @@ You are configuring this copy of the migration harness for the user's project. I
 
 ## Questions
 
-1. What are you migrating, from what to what? Example: "the legacy billing service
-   to a new billing service". Default: none; "skip" keeps the placeholder.
+1. What are you migrating, from what to what? Example: "a legacy monolith to a set
+   of new services". Default: none; "skip" keeps the placeholder.
 2. Which repositories are involved? For each: a short name, its role (legacy, new,
    shared), where it is checked out on this machine, and whether agents change it.
    Default: only this repository, as the new system. Offer to link each one at
