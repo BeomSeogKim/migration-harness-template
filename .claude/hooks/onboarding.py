@@ -23,9 +23,10 @@ is off, the guard uses default production markers, and the values in <angle brac
 in AGENTS.md are unknown, not facts.
 
 In your first reply, tell the user this in one sentence and offer to run the setup
-interview now. It is defined in .claude/commands/setup.md (the /setup command); follow
-that file. If the user's first message is a greeting or asks how to start, begin the
-interview with its first question instead of only offering. If they ask for something
+interview now. The interview is defined in .claude/commands/setup.md (the /setup
+command): read that file before asking anything and ask its questions in order, never
+your own. If the user's first message is a greeting or asks how to start, read the
+file and ask its first question instead of only offering. If they ask for something
 else, do that and offer setup once afterwards; do not raise it again in this session.
 """
 
