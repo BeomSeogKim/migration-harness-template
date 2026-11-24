@@ -62,6 +62,18 @@ class GuardTest(unittest.TestCase):
         self.assertDenied("mysql -h orders-prod -e 'select 1'", config)
         self.assertAllowed("psql -h localhost -c 'select 1'", config)
 
+    def test_protected_branches_come_from_config(self):
+        config = {"protected_branches": ["develop"]}
+        self.assertDenied("git push origin develop", config)
+        self.assertAllowed("git push origin feature/ticket-1", config)
+
+    def test_target_commands_get_the_production_check(self):
+        config = {"production_markers": ["prod"], "target_commands": ["kubectl", "flyway"]}
+        self.assertDenied("kubectl --context prod apply -f job.yaml", config)
+        self.assertDenied("flyway -url=jdbc:postgresql://db-prod/app migrate", config)
+        self.assertAllowed("kubectl --context dev get pods", config)
+        self.assertAllowed("kubectl --context prod get pods", {"production_markers": ["prod"]})
+
     def test_recursive_delete_of_home_is_denied(self):
         self.assertDenied("rm -rf ~")
         self.assertDenied("rm -rf /")

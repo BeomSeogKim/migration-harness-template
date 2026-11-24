@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -84,6 +85,26 @@ class StopGateTest(unittest.TestCase):
         result = self.gate()
         self.assertEqual(result.returncode, 2)
         self.assertIn("build failed", result.stderr)
+
+    def test_change_in_a_review_repo_blocks_until_reviewed(self):
+        other = Path(self._tmp.name + "-other")
+        other.mkdir()
+        self.addCleanup(shutil.rmtree, other, True)
+        git(other, "init", "-q", "-b", "main")
+        (other / "service.py").write_text("print('v1')\n")
+        (self.root / "harness.json").write_text(json.dumps({"review_repos": [str(other)]}))
+        git(self.root, "add", ".")
+        git(self.root, "commit", "-qm", "fixture")
+        result = self.gate()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("service.py", result.stderr)
+        self.mark_pass()
+        self.assertEqual(self.gate().returncode, 0)
+
+    def test_harness_not_yet_onboarded_does_not_gate(self):
+        (self.root / "harness.json").write_text(json.dumps({"onboarded": False}))
+        (self.root / "app.py").write_text("print('v2')\n")
+        self.assertEqual(self.gate().returncode, 0)
 
     def test_skip_file_lets_work_in_progress_stop(self):
         (self.root / "app.py").write_text("print('v2')\n")

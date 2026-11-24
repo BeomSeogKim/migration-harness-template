@@ -4,10 +4,14 @@
 Prevents: an agent declaring the work finished while the build is red or nobody
 independent has looked at the change.
 
-Passes when there are no non-documentation changes, or when
+Passes when there are no non-documentation changes (here and in the repositories
+listed in harness.json "review_repos"), or when
   1. the build command in harness.json (if set) exits 0, and
   2. .harness/review.pass holds the fingerprint of the current changes.
 Escape hatch for work in progress: `touch .harness/skip`.
+
+Off while harness.json says "onboarded": false. Before setup there is no build command
+and no review flow to satisfy, and the setup interview must be able to wait for answers.
 """
 import json
 import os
@@ -35,11 +39,15 @@ def main():
     if (root / ".harness" / "skip").exists():
         return
 
+    config = load_config(root)
+    if config.get("onboarded") is False:
+        return
+
     paths = changed_paths(root)
     if not paths:
         return
 
-    build = load_config(root).get("build_command", "").strip()
+    build = str(config.get("build_command") or "").strip()
     if build:
         result = subprocess.run(
             build, shell=True, cwd=root, capture_output=True, text=True, timeout=900

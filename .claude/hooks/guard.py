@@ -2,11 +2,15 @@
 """PreToolUse guard for Bash: the lines an agent must not cross.
 
 Prevents: the mistakes that cannot be undone — rewriting shared history, dropping
-data, deleting without a WHERE, or touching a production database.
+data, deleting without a WHERE, or touching production.
 
 It denies instead of asking. A prompt the agent can talk its way past is not a
-boundary. Production markers come from harness.json ("production_markers"), for
-example ["prod", "prd", "live", "db.example.com"].
+boundary. From harness.json:
+  "production_markers"  words or hosts that mean production, e.g. ["prod", "db.example.com"]
+  "protected_branches"  branches agents never push to (default ["main", "master"])
+  "target_commands"     commands besides the built-in database clients that reach a
+                        database or an environment, e.g. ["flyway", "kubectl", "ssh"];
+                        the SQL rules and production markers apply to them too
 """
 import json
 import os
@@ -15,17 +19,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from harness_lib import load_config  # noqa: E402
+from harness_lib import config_list, load_config  # noqa: E402
 
-DB_CLIENT = re.compile(r"(?:^|[;&|(\s])(mysql|mariadb|psql|pgcli|sqlite3|sqlcmd|mongosh)(?:\s|$)", re.I)
+DB_CLIENTS = ["mysql", "mariadb", "psql", "pgcli", "sqlite3", "sqlcmd", "sqlplus", "mongosh"]
+DEFAULT_BRANCHES = ["main", "master"]
 RULES = [
     (
         re.compile(r"git\s+push\b[^;&|]*(?:\s-f\b|--force\b|--force-with-lease\b|\s\+\S)", re.I),
         "force-pushing rewrites shared history",
-    ),
-    (
-        re.compile(r"git\s+push\b[^;&|]*\s(?:origin\s+)?(?:HEAD:)?(?:refs/heads/)?(?:main|master)\b", re.I),
-        "pushing to the default branch skips review",
     ),
     (
         re.compile(r"rm\s+-[a-z]*r[a-z]*f?[a-z]*\s+(?:/|~|\$HOME|\.|\*)(?:\s|$)", re.I),
@@ -53,11 +54,24 @@ def deny(reason):
     sys.exit(0)
 
 
-def check(command, markers):
+def any_of(names):
+    return "|".join(re.escape(name) for name in names)
+
+
+def check(command, config):
     for pattern, reason in RULES:
         if pattern.search(command):
             return reason
-    if DB_CLIENT.search(command):
+    branches = config_list(config, "protected_branches", DEFAULT_BRANCHES)
+    if branches and re.search(
+        rf"git\s+push\b[^;&|]*\s(?:origin\s+)?(?:HEAD:)?(?:refs/heads/)?(?:{any_of(branches)})\b",
+        command,
+        re.I,
+    ):
+        return "pushing to a protected branch skips review"
+    clients = DB_CLIENTS + config_list(config, "target_commands")
+    if re.search(rf"(?:^|[;&|(\s])(?:{any_of(clients)})(?:\s|$)", command, re.I):
+        markers = config_list(config, "production_markers")
         for pattern, reason in SQL_RULES:
             if pattern.search(command):
                 return reason
@@ -73,8 +87,7 @@ def main():
     except Exception:
         return  # an unparsable payload is not this guard's business
     root = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-    markers = load_config(root).get("production_markers", [])
-    reason = check(command, markers)
+    reason = check(command, load_config(root))
     if reason:
         deny(reason)
 
